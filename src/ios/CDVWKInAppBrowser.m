@@ -96,12 +96,12 @@ static CDVWKInAppBrowser* instance = nil;
     NSString* target = [command argumentAtIndex:1 withDefault:kInAppBrowserTargetSelf];
     NSString* options = [command argumentAtIndex:2 withDefault:@"" andClass:[NSString class]];
     
+    NSDictionary *headerDictionary = [command argumentAtIndex:3];
     NSString *httpHeaderField;
     NSString *httpHeaderValue;
-    NSDictionary* dictionary = [command argumentAtIndex:3];
-    if (dictionary && dictionary.allKeys.count > 0){
-        httpHeaderField = dictionary.allKeys[0];
-        httpHeaderValue = [dictionary objectForKey:httpHeaderField];
+    if (headerDictionary && headerDictionary.allKeys.count > 0){
+        httpHeaderField = headerDictionary.allKeys[0];
+        httpHeaderValue = [headerDictionary objectForKey:httpHeaderField];
     }
     
     self.callbackId = command.callbackId;
