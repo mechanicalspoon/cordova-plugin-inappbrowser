@@ -96,6 +96,14 @@ static CDVWKInAppBrowser* instance = nil;
     NSString* target = [command argumentAtIndex:1 withDefault:kInAppBrowserTargetSelf];
     NSString* options = [command argumentAtIndex:2 withDefault:@"" andClass:[NSString class]];
     
+    NSString *httpHeaderField;
+    NSString *httpHeaderValue;
+    NSDictionary* dictionary = [command argumentAtIndex:3];
+    if (dictionary && dictionary.allKeys.count > 0){
+        httpHeaderField = dictionary.allKeys[0];
+        httpHeaderValue = [dictionary objectForKey:httpHeaderField];
+    }
+    
     self.callbackId = command.callbackId;
     
     if (url != nil) {
@@ -111,7 +119,7 @@ static CDVWKInAppBrowser* instance = nil;
         } else if ([target isEqualToString:kInAppBrowserTargetSystem]) {
             [self openInSystem:absoluteUrl];
         } else { // _blank or anything else
-            [self openInInAppBrowser:absoluteUrl withOptions:options];
+            [self openInInAppBrowser:absoluteUrl withOptions:options httpHeaderField:httpHeaderField httpHeaderValue:httpHeaderValue];
         }
         
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -123,7 +131,7 @@ static CDVWKInAppBrowser* instance = nil;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void)openInInAppBrowser:(NSURL*)url withOptions:(NSString*)options
+- (void)openInInAppBrowser:(NSURL*)url withOptions:(NSString*)options httpHeaderField:(NSString *)httpHeaderField httpHeaderValue:(NSString *)httpHeaderValue
 {
     CDVInAppBrowserOptions* browserOptions = [CDVInAppBrowserOptions parseOptions:options];
     
@@ -256,7 +264,7 @@ static CDVWKInAppBrowser* instance = nil;
     }
     _waitForBeforeload = ![_beforeload isEqualToString:@""];
     
-    [self.inAppBrowserViewController navigateTo:url];
+    [self.inAppBrowserViewController navigateTo:url httpHeaderField:httpHeaderField httpHeaderValue:httpHeaderValue];
     if (!browserOptions.hidden) {
         [self show:nil withNoAnimate:browserOptions.hidden];
     }
@@ -383,7 +391,7 @@ static CDVWKInAppBrowser* instance = nil;
     NSURL* url = [NSURL URLWithString:urlStr];
     //_beforeload = @"";
     _waitForBeforeload = NO;
-    [self.inAppBrowserViewController navigateTo:url];
+    [self.inAppBrowserViewController navigateTo:url httpHeaderField:nil httpHeaderValue:nil];
 }
 
 // This is a helper method for the inject{Script|Style}{Code|File} API calls, which
@@ -1081,13 +1089,18 @@ BOOL isExiting = FALSE;
     });
 }
 
-- (void)navigateTo:(NSURL*)url
+- (void)navigateTo:(NSURL*)url httpHeaderField:(NSString *)httpHeaderField httpHeaderValue:(NSString *)httpHeaderValue
 {
     if ([url.scheme isEqualToString:@"file"]) {
         [self.webView loadFileURL:url allowingReadAccessToURL:url];
     } else {
-        NSURLRequest* request = [NSURLRequest requestWithURL:url];
-        [self.webView loadRequest:request];
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+        
+        if (httpHeaderField && httpHeaderValue){
+            [request setValue:httpHeaderValue forHTTPHeaderField:httpHeaderField];
+        }
+        
+        [webView loadRequest:request];
     }
 }
 
