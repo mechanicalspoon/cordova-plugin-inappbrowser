@@ -1100,7 +1100,7 @@ BOOL isExiting = FALSE;
             [request setValue:httpHeaderValue forHTTPHeaderField:httpHeaderField];
         }
         
-        [webView loadRequest:request];
+        [self.webView loadRequest:request];
     }
 }
 
